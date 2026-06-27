@@ -3,3 +3,6 @@ __pycache__/
 scan_results.json
 scan_report.html
 .env
+function.zip
+
+output.json

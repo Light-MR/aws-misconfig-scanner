@@ -2,6 +2,8 @@
 Generacion de reportes: consola, JSON y HTML.
 """
 
+import os
+import boto3
 import json
 from datetime import datetime, timezone
 
@@ -41,7 +43,37 @@ def print_report(findings):
         print(f"        {f['issue']}\n")
 
 
-def export_json(findings, filename='scan_results.json'):
+def send_alert(findings):
+    topic_arn = os.environ.get("AWS_SNS_TOPIC_ARN")
+    if not topic_arn:
+        print("WARN: AWS_SNS_TOPIC_ARN no configurada, se omite alerta SNS")
+        return
+    high_findings = [f for f in findings if f.get("severity") == "ALTA"]
+    if not high_findings:
+        return
+    lines = [f"{f['service']} - {f['resource']}: {f['issue']}" for f in high_findings]
+    message = (
+            f"AWS Misconfiguration Scanner: {len(high_findings)} hallazgo(s) ALTA detectado(s)\n\n"
+            + "\n".join(lines)
+            )
+    sns = boto3.client("sns")
+    sns.publish(
+            TopicArn=topic_arn,
+            Subject="Alerta: hallazgos ALTA en AWS Scanner",
+            Message=message,
+            )
+    print(f"[INFO] Alerta SNS enviada ({len(high_findings)} hallazgo(s) ALTA)")
+
+def upload_to_s3(local_path, key):
+    bucket_name = os.environ.get("AWS_SCANNER_BUCKET")
+    if not bucket_name:
+        print("WARN: AWS_SCANNER_BUCKET no configurada, se omite upload a S3")
+        return
+    s3 = boto3.client("s3")
+    s3.upload_file(local_path, bucket_name, key)
+    print(f"[INFO] Subido a s3://{bucket_name}/{key}")
+
+def export_json(findings, filename='/tmp/scan_results.json'):
     """Exporta los findings a un archivo JSON."""
     output = {
         'scan_date': datetime.now(timezone.utc).isoformat(),
@@ -53,7 +85,7 @@ def export_json(findings, filename='scan_results.json'):
     print(f"Resultados exportados a {filename}")
 
 
-def export_html(findings, filename='scan_report.html', region='us-east-1', profile='read-scanner'):
+def export_html(findings, filename='/tmp/scan_report.html', region='us-east-1', profile='read-scanner'):
     """Genera un reporte HTML standalone con los findings."""
     severity_order = {'ALTA': 0, 'MEDIA': 1, 'BAJA': 2}
     findings_sorted = sorted(findings, key=lambda f: severity_order.get(f['severity'], 99))

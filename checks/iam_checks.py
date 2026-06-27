@@ -13,8 +13,10 @@ def check_iam_users():
     findings = []
 
     # Generar el reporte de credenciales 
-    iam.generate_credential_report()
-    time.sleep(2)
+    status = iam.generate_credential_report()
+    while status['State'] != 'COMPLETE':
+        time.sleep(2)
+        status = iam.generate_credential_report()
 
     response = iam.get_credential_report()
     report_csv = response['Content'].decode('utf-8')

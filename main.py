@@ -12,7 +12,7 @@ from checks.ec2_checks import check_open_security_groups
 from checks.cloudtrail_checks import check_cloudtrail_enabled
 from checks.rds_checks import check_public_rds
 from checks.root_account_checks import check_root_account
-from report import print_report, export_json, export_html
+from report import print_report, export_json, export_html, send_alert
 
 
 def run_all_checks():
@@ -47,3 +47,4 @@ if __name__ == '__main__':
     print_report(findings)
     export_json(findings)
     export_html(findings)
+    send_alert(findings)

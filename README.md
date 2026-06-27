@@ -73,11 +73,31 @@ aws-misconfig-scanner/
 │   └── root_account_checks.py
 ```
 
+## Automated execution (AWS Lambda)
+
+The scanner can run automatically every 24 hours via Lambda + EventBridge, with reports uploaded to S3 and alerts sent through SNS instead of saved locally.
+
+```bash
+zip -r function.zip main.py lambda_function.py report.py checks/
+aws lambda create-function \
+  --function-name aws-misconfig-scanner \
+  --runtime python3.13 \
+  --handler lambda_function.lambda_handler \
+  --role <lambda-execution-role-arn> \
+  --zip-file fileb://function.zip \
+  --timeout 60 --memory-size 256 \
+  --environment "Variables={AWS_SNS_TOPIC_ARN=<topic-arn>,AWS_SCANNER_BUCKET=<bucket-name>}"
+```
+
+The execution role needs `SecurityAudit`, plus scoped `s3:PutObject` on the reports bucket and `sns:Publish` on the alert topic. CloudWatch Logs permissions are also required for debugging.
+
+> Note: the IAM credential report is cached by AWS for up to 4 hours. New IAM users created within that window won't appear in `check_iam_users` results until the cache expires. This doesn't affect the daily schedule, since invocations are 24h apart, but it can be confusing during manual testing right after an IAM change.
+
 ## Roadmap
 
-- Lambda + EventBridge for scheduled, serverless execution
+
 - Validation against CloudGoat scenarios
-- SNS/email alerting on new findings
+- Additional checks: unrotated KMS keys
 
 ## Scope
 
