@@ -1,6 +1,6 @@
 # aws-misconfig-scanner
 
-Read-only AWS security audit tool. Scans S3, IAM, EC2, CloudTrail, and RDS for misconfigurations mapped to the CIS AWS Foundations Benchmark. No write permissions, no remediation: detection only.
+Read-only AWS security audit tool. Scans S3, IAM, EC2, CloudTrail, RDS and the root account for misconfigurations mapped to the CIS AWS Foundations Benchmark. No write permissions, no remediation: detection only.
 
 ## Motivation
 
@@ -102,6 +102,12 @@ The execution role needs `SecurityAudit`, plus scoped `s3:PutObject` on the repo
 ## Scope
 
 Intended for auditing accounts the user owns or is explicitly authorized to test.
+
+## Limitations
+
+* Point-in-time scan: it reports the state of the account when it runs, not changes in between.
+* Detection only: it does not remediate or change anything in the account.
+* Covers only the services listed in the checks table above.
 
 ## License
 
