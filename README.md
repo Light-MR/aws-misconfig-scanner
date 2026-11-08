@@ -26,9 +26,9 @@ EC2 check covers 50+ ports across remote administration, databases, directory se
 ## Setup
 
 ```bash
-git clone https://github.com/Light-MR/aws-misconfig-scanner.git
-cd aws-misconfig-scanner
-pip3 install boto3 --break-system-packages
+python3 -m venv .venv
+source .venv/bin/activate
+pip3 install boto3
 ```
 
 Requires an IAM user scoped to the `SecurityAudit` managed policy. Root credentials are not used by this tool and should not be used to run it.
